@@ -1,0 +1,25 @@
+{
+  "name": "interits-chatbot",
+  "version": "2.0.0",
+  "description": "InterITS Chatbot - LangChain + Gemini + Zalo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@langchain/google-genai": "^0.1.0",
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.19.0",
+    "langchain": "^0.3.0",
+    "mysql2": "^3.9.0",
+    "nodemailer": "^8.0.5",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
