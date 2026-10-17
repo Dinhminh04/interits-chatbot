@@ -1,91 +1,160 @@
-# InterITS Chatbot v2.0
-## LangChain + Gemini + MySQL + Zalo OA
+# InterITS Chatbot
 
----
+A demo AI sales consultant chatbot that answers questions about an IT company's products, remembers the conversation, and turns interested visitors into sales leads.
 
-## 🗂️ Cấu trúc project
+## Description
 
+### What the application does
+
+Visitors open the chat widget on the website and ask about the company's products (callbot, voicebot, chatbot and other AI solutions). The bot answers based on a product catalog written in the system prompt and remembers what was said earlier in the chat.
+
+When a visitor shares their name, company, phone number and email, the bot saves them as a sales lead and sends an email alert to the sales team.
+
+Admins log in to a dashboard to see statistics, manage leads by status, read past conversations and edit the system prompt directly, with no need to restart the server.
+
+This is a personal learning project. The company content is used for demo purposes only and is not connected to any real company data.
+
+### Why these technologies
+
+- **LangChain:** manages the prompt template and per-session conversation memory, so I did not have to build chat history handling by hand.
+- **Gemini API:** generates natural replies in Vietnamese; the `flash-lite` model is fast and cheap enough for a chatbot.
+- **Node.js + Express:** a simple REST API server, and the same language (JavaScript) as the frontend.
+- **MySQL:** stores conversations, messages, leads, admin accounts and the system prompt.
+- **React + Vite:** fast development setup for the chat widget and the admin dashboard.
+- **Nodemailer:** sends lead alerts through Gmail.
+
+### Challenges
+
+- **Getting structured data out of free text:** the prompt tells Gemini to add a hidden tag `##LEAD##name|company|phone|email|product##END##` once it has all the details. The server reads this tag with a regular expression, saves the lead, and removes the tag before showing the reply.
+- **Memory after a restart:** LangChain memory lives in RAM and is lost when the server restarts, so the last 10 messages are reloaded from MySQL into memory when a session continues.
+- **Changing the bot's behavior without redeploying:** the system prompt is stored in the database; when an admin saves a new prompt, all cached chains are cleared and rebuilt with it.
+
+### Future features
+
+- Replace SHA-256 password hashing with bcrypt, and in-memory tokens with JWT
+- Answer from company documents (PDF, Word) using RAG instead of a fixed prompt
+- Zalo and Facebook Messenger integration
+- Docker setup for easier deployment
+
+## Table of Contents
+
+- [Description](#description)
+- [Tech Stack](#tech-stack)
+- [Installation and Running](#installation-and-running)
+- [API Endpoints](#api-endpoints)
+- [Project Structure](#project-structure)
+- [Author](#author)
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| AI | LangChain, Google Gemini API (gemini-2.5-flash-lite) |
+| Backend | Node.js, Express |
+| Database | MySQL |
+| Frontend | React 18, Vite, React Router, Chart.js |
+| Email | Nodemailer (Gmail) |
+
+## Installation and Running
+
+### Requirements
+
+- Node.js 18 or later
+- MySQL (for example via XAMPP)
+- A Google Gemini API key ([aistudio.google.com](https://aistudio.google.com))
+- A Gmail account with an App Password (for lead emails)
+
+### Step 1: Clone the repository
+
+```bash
+git clone https://github.com/Dinhminh04/interits-chatbot.git
+cd interits-chatbot
 ```
-chatbot/
-├── server.js      ← Express server (API endpoint)
-├── chatbot.js     ← LangChain + Gemini (xử lý AI)
-├── database.js    ← MySQL XAMPP (lưu trữ)
-├── zalo.js        ← Zalo OA (gửi thông báo)
-├── index.html     ← Frontend chatbot widget
-├── .env           ← Cấu hình (API key, DB...)
-├── package.json   ← Dependencies
-└── README.md
-```
 
----
+### Step 2: Create the database
 
-## 🚀 Cài đặt và chạy
+Create an empty MySQL database named `interits_chatbot`. The tables are created automatically when the server starts.
 
-### Bước 1: Cài Node.js dependencies
+### Step 3: Set up the backend
+
 ```bash
 npm install
 ```
 
-### Bước 2: Bật XAMPP
-- Mở XAMPP Control Panel
-- Start **Apache** và **MySQL**
-- Vào phpMyAdmin (http://localhost/phpmyadmin)
-- Tạo database mới tên: `interits_chatbot`
-- (Không cần tạo bảng, hệ thống tự tạo khi chạy)
+Create a `.env` file in the root folder:
 
-### Bước 3: Cấu hình .env
 ```env
-GEMINI_API_KEY=your_gemini_api_key   # Lấy tại aistudio.google.com
-ZALO_OA_TOKEN=your_zalo_oa_token     # Lấy tại developers.zalo.me
-ZALO_USER_ID=your_zalo_user_id       # User ID Zalo của mày
+PORT=3001
+GEMINI_API_KEY=your_gemini_api_key
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASS=
+DB_NAME=interits_chatbot
+
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_gmail_app_password
+EMAIL_TO=sales_team_email@gmail.com
 ```
 
-### Bước 4: Chạy server
+### Step 4: Run the backend
+
 ```bash
-# Development (auto restart khi sửa code)
 npm run dev
-
-# Production
-npm start
 ```
 
-### Bước 5: Mở chatbot
-- Mở file `index.html` trong trình duyệt
-- Hoặc để Apache (XAMPP) serve file này
+The API runs at `http://localhost:3001`.
 
----
+### Step 5: Set up and run the frontend
 
-## 📱 Cách lấy Zalo User ID
+Open a new terminal:
 
-1. Đăng ký Zalo OA tại: https://oa.zalo.me (chọn "Cá nhân")
-2. Tạo app tại: https://developers.zalo.me → lấy **Access Token**
-3. Mày (nhân viên) dùng Zalo cá nhân → **follow OA** đó
-4. Vào OA Manager → Người quan tâm → copy **user_id** của mày
-5. Điền vào `.env`
-
----
-
-## 🔗 API Endpoints
-
-| Method | URL | Mô tả |
-|--------|-----|-------|
-| POST | /chat | Gửi tin nhắn chatbot |
-| GET | /history/:session_id | Lấy lịch sử hội thoại |
-| GET | /admin/leads | Xem danh sách leads |
-
-### Ví dụ gọi API:
 ```bash
-curl -X POST http://localhost:3001/chat \
-  -H "Content-Type: application/json" \
-  -d '{"session_id":"test123","message":"Callbot là gì?"}'
+cd frontend
+npm install
+npm run dev
 ```
 
----
+The app runs at `http://localhost:5173`. Requests to `/api` are forwarded to the backend.
 
-## 🗄️ Database (tự động tạo)
+On the first start, a default admin account is created: `admin` / `admin123`. Change it after logging in.
 
-- **conversations** — Phiên hội thoại
-- **messages** — Tin nhắn (user + assistant)
-- **leads** — Khách hàng tiềm năng
+## API Endpoints
 
----
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Health check |
+| GET | `/preview` | Preview the current system prompt |
+| POST | `/chat` | Send a message and get the bot's reply |
+| GET | `/history/:session_id` | Get the chat history of a session |
+| POST | `/admin/login` | Admin login |
+| GET | `/admin/stats` | Dashboard statistics |
+| GET | `/admin/leads` | List leads |
+| PUT | `/admin/leads/:id/status` | Update a lead's status |
+| GET | `/admin/conversations` | List conversations |
+| DELETE | `/admin/conversations/:session_id` | Delete a conversation |
+| GET | `/admin/prompt` | Get the system prompt |
+| PUT | `/admin/prompt` | Update the system prompt |
+
+All `/admin/*` routes except login require a Bearer token.
+
+## Project Structure
+
+```
+interits-chatbot/
+├── server.js        # Express server and API routes
+├── chatbot.js       # LangChain + Gemini: prompt, memory, lead extraction
+├── database.js      # MySQL connection, tables and queries
+├── email.js         # Lead alert emails (Nodemailer)
+└── frontend/        # React + Vite
+    └── src/
+        ├── components/
+        │   ├── ChatWidget.jsx
+        │   └── admin/   # Dashboard, Leads, Conversations, SystemPrompt
+        └── pages/       # Home, Admin
+```
+
+## Author
+
+Nguyen Dinh Minh — [github.com/Dinhminh04](https://github.com/Dinhminh04)
