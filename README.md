@@ -78,10 +78,15 @@ Create an empty MySQL database named `interits_chatbot`. The tables are created 
 ### Step 3: Set up the backend
 
 ```bash
+cd backend
 npm install
 ```
 
-Create a `.env` file in the root folder:
+Copy `.env.example` to `.env` in the `backend` folder and fill in your values:
+
+```bash
+cp .env.example .env
+```
 
 ```env
 PORT=3001
@@ -108,7 +113,7 @@ The API runs at `http://localhost:3001`.
 
 ### Step 5: Set up and run the frontend
 
-Open a new terminal:
+Open a new terminal in the project root:
 
 ```bash
 cd frontend
@@ -143,17 +148,38 @@ All `/admin/*` routes except login require a Bearer token.
 
 ```
 interits-chatbot/
-├── server.js        # Express server and API routes
-├── chatbot.js       # LangChain + Gemini: prompt, memory, lead extraction
-├── database.js      # MySQL connection, tables and queries
-├── email.js         # Lead alert emails (Nodemailer)
-└── frontend/        # React + Vite
+├── backend/                       # Node.js + Express REST API
+│   ├── src/
+│   │   ├── server.js              # Entry point: load .env, init DB, start server
+│   │   ├── app.js                 # Express app, middleware and routes
+│   │   ├── config/
+│   │   │   └── db.js              # MySQL pool, table creation, default admin
+│   │   ├── routes/                # chat.routes.js, admin.routes.js
+│   │   ├── controllers/           # chat.controller.js, admin.controller.js
+│   │   ├── models/                # SQL queries: admin, conversation, lead, prompt, stats
+│   │   ├── services/
+│   │   │   ├── chatbot.service.js # LangChain + Gemini: prompt, memory, lead extraction
+│   │   │   ├── email.service.js   # Lead alert emails (Nodemailer)
+│   │   │   └── auth.service.js    # Admin token handling
+│   │   ├── middleware/
+│   │   │   └── auth.middleware.js # Protects admin routes
+│   │   ├── prompts/
+│   │   │   └── default-prompt.js  # Default system prompt (product catalog)
+│   │   └── utils/
+│   │       └── hash.js            # Password hashing
+│   ├── .env.example
+│   └── package.json
+└── frontend/                      # React + Vite
     └── src/
         ├── components/
         │   ├── ChatWidget.jsx
-        │   └── admin/   # Dashboard, Leads, Conversations, SystemPrompt
-        └── pages/       # Home, Admin
+        │   └── admin/             # Dashboard, Leads, Conversations, SystemPrompt
+        └── pages/                 # Home, Admin
 ```
+
+### Request flow
+
+`routes` → `controllers` (read the request, send the response) → `services` (AI, email, auth) and `models` (SQL queries) → `config/db.js` (MySQL)
 
 ## Author
 

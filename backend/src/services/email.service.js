@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-require("dotenv").config();
 
 // ─────────────────────────────────────────
 // Cấu hình Gmail
